@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'core/database/database_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'features/community/presentation/screens/community_screen.dart';
@@ -50,10 +51,12 @@ class _TomaAppState extends State<TomaApp> {
         break;
     }
 
+    final initialStreak = DatabaseService.instance.getStreakDays();
+
     return MultiBlocProvider(
       providers: [
         BlocProvider<TimerBloc>(
-          create: (_) => TimerBloc(streakDays: 7),
+          create: (_) => TimerBloc(streakDays: initialStreak),
         ),
         BlocProvider<ConnectivityCubit>(
           create: (_) => ConnectivityCubit(),
@@ -84,7 +87,7 @@ class _TomaAppState extends State<TomaApp> {
         return TimerScreen(
           onOpenProfile: () => setState(() => _showingProfile = true),
           onOpenSettings: () {
-            // Toggle theme or settings preview
+            // Toggle theme preview
             setState(() {
               _currentTheme = _currentTheme == TomaThemeVariant.dark
                   ? TomaThemeVariant.monochrome
@@ -116,8 +119,8 @@ class _TomaAppState extends State<TomaApp> {
           children: [
             _buildNavItem(0, Icons.timer_outlined, Icons.timer, 'Timer'),
             _buildNavItem(1, Icons.bar_chart_outlined, Icons.bar_chart, 'Stats'),
-            _buildNavItem(2, Icons.storefront_outlined, Icons.storefront, 'Shop'),
-            _buildNavItem(3, Icons.people_outline, Icons.people, 'Community'),
+            _buildNavItem(2, Icons.palette_outlined, Icons.palette, 'Ambiance'),
+            _buildNavItem(3, Icons.forum_outlined, Icons.forum, 'Community'),
           ],
         ),
       ),

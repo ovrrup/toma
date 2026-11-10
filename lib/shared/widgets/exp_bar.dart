@@ -35,12 +35,22 @@ class ExpBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '⚡ Lv.$level · $levelTitle',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.darkExpPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                const Icon(
+                  Icons.trending_up,
+                  size: 15,
+                  color: AppColors.darkExpPrimary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Level $level · $levelTitle',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.darkExpPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
             Text(
               '$currentExp / $nextLevelExp EXP',
@@ -65,8 +75,8 @@ class ExpBar extends StatelessWidget {
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFF8B5CF6), // Royal Violet
-                      Color(0xFF00E5FF), // Cyan focus energy
+                      AppColors.darkExpPrimary,
+                      AppColors.darkPrimary,
                     ],
                   ),
                 ),

@@ -5,6 +5,7 @@ import 'app_typography.dart';
 enum TomaThemeVariant { dark, light, monochrome }
 
 /// Theme manager for Toma.
+/// Configures unified Material 3 themes with a serene, calm red / obsidian burgundy ambiance.
 class AppTheme {
   AppTheme._();
 
@@ -16,7 +17,12 @@ class AppTheme {
         primary: AppColors.darkPrimary,
         secondary: AppColors.darkSecondary,
         surface: AppColors.darkSurface,
+        surfaceContainerHighest: Color(0xFF1E1215),
+        onPrimary: AppColors.darkTextPrimary,
+        onSurface: AppColors.darkTextPrimary,
+        error: AppColors.darkAccent,
       ),
+      dividerColor: Colors.white.withValues(alpha: 0.08),
       textTheme: const TextTheme(
         displayLarge: AppTypography.displayLarge,
         headlineMedium: AppTypography.headlineMedium,
@@ -39,7 +45,12 @@ class AppTheme {
         primary: AppColors.lightPrimary,
         secondary: AppColors.lightSecondary,
         surface: AppColors.lightSurface,
+        surfaceContainerHighest: Color(0xFFF0E6E6),
+        onPrimary: Colors.white,
+        onSurface: AppColors.lightTextPrimary,
+        error: AppColors.lightPrimary,
       ),
+      dividerColor: Colors.black.withValues(alpha: 0.08),
       textTheme: const TextTheme(
         displayLarge: AppTypography.displayLarge,
         headlineMedium: AppTypography.headlineMedium,
@@ -62,7 +73,11 @@ class AppTheme {
         primary: AppColors.monoPrimary,
         secondary: AppColors.monoSecondary,
         surface: AppColors.monoSurface,
+        surfaceContainerHighest: Color(0xFF1A1A1C),
+        onPrimary: Colors.black,
+        onSurface: AppColors.monoTextPrimary,
       ),
+      dividerColor: Colors.white.withValues(alpha: 0.08),
       textTheme: const TextTheme(
         displayLarge: AppTypography.displayLarge,
         headlineMedium: AppTypography.headlineMedium,

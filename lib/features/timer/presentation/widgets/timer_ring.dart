@@ -4,7 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../bloc/timer_state.dart';
 
-/// Circular progress ring displaying the remaining countdown and reward previews.
+/// Circular progress ring displaying the remaining countdown in a calm, uncluttered style.
 class TimerRing extends StatelessWidget {
   final TimerState state;
   final VoidCallback? onModeTap;
@@ -17,7 +17,7 @@ class TimerRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const size = 280.0;
+    const size = 260.0;
 
     return Center(
       child: SizedBox(
@@ -35,7 +35,7 @@ class TimerRing extends StatelessWidget {
               ),
             ),
 
-            // Inner content: Time, Mode badge, and Reward preview
+            // Inner content: Mode badge and Time display
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -46,83 +46,47 @@ class TimerRing extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14.0,
-                      vertical: 4.0,
+                      vertical: 5.0,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: AppColors.darkSurfaceGlass,
                       borderRadius: BorderRadius.circular(16.0),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: AppColors.darkBorderGlass,
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          state.mode.label.toUpperCase(),
-                          style: AppTypography.bodySmall.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            color: state.mode.isBreak
-                                ? AppColors.darkSuccess
-                                : AppColors.darkPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.swap_horiz,
-                          size: 14,
-                          color: AppColors.darkTextSecondary,
-                        ),
-                      ],
+                    child: Text(
+                      state.mode.label.toUpperCase(),
+                      style: AppTypography.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
+                        fontSize: 11,
+                        color: state.mode.isBreak
+                            ? AppColors.darkSuccess
+                            : AppColors.darkPrimary,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
                 // Large Tabular Time Display
                 Text(
                   state.formattedTime,
                   style: AppTypography.timerDisplay.copyWith(
                     color: AppColors.darkTextPrimary,
+                    fontSize: 56.0,
                   ),
                 ),
-                const SizedBox(height: 8),
 
-                // Potential Reward preview (only shown during active focus sessions)
-                if (!state.mode.isBreak) ...[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '+${state.potentialExp} EXP',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.darkExpPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '·',
-                        style: TextStyle(
-                          color: AppColors.darkTextSecondary.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '+${state.potentialCoins} 🪙',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.darkSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ] else ...[
+                if (state.mode.isBreak) ...[
+                  const SizedBox(height: 8),
                   Text(
-                    'Rest & recharge ☕',
+                    'Rest & breathe',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.darkSuccess,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
@@ -148,21 +112,21 @@ class _TimerRingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - 24.0) / 2;
-    const strokeWidth = 10.0;
+    const strokeWidth = 5.0;
 
     // 1. Background Inactive Track
     final trackPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
+      ..color = Colors.white.withValues(alpha: 0.05)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth;
 
     canvas.drawCircle(center, radius, trackPaint);
 
-    // 2. Active Progress Arc with Gradient
+    // 2. Active Progress Arc with Calm Red/Rose Gradient
     if (progress > 0.0) {
       final gradientColors = isBreak
-          ? [const Color(0xFF4ADE80), const Color(0xFF00E5FF)]
-          : [const Color(0xFFFF6B35), const Color(0xFFFFD700)];
+          ? [const Color(0xFF8FA89B), const Color(0xFFE2A898)]
+          : [const Color(0xFFD94D52), const Color(0xFFE2A898)];
 
       final sweepGradient = SweepGradient(
         startAngle: -math.pi / 2,

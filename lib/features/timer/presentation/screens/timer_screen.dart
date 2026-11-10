@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
+import '../../../../core/database/database_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/services/nostr_service.dart';
 import '../../../../shared/widgets/animated_pressable.dart';
-import '../../../../shared/widgets/coin_pill.dart';
 import '../../../../shared/widgets/frosted_glass_card.dart';
 import '../../../connectivity/presentation/widgets/ghost_toggle.dart';
+import '../../../gamification/data/repositories/gamification_repository.dart';
+import '../../domain/entities/session.dart';
 import '../../domain/entities/session_type.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
@@ -14,7 +19,7 @@ import '../widgets/session_summary_card.dart';
 import '../widgets/timer_controls.dart';
 import '../widgets/timer_ring.dart';
 
-class TimerScreen extends StatelessWidget {
+class TimerScreen extends StatefulWidget {
   final VoidCallback? onOpenProfile;
   final VoidCallback? onOpenSettings;
 
@@ -23,6 +28,57 @@ class TimerScreen extends StatelessWidget {
     this.onOpenProfile,
     this.onOpenSettings,
   });
+
+  @override
+  State<TimerScreen> createState() => _TimerScreenState();
+}
+
+class _TimerScreenState extends State<TimerScreen> {
+  StreamSubscription<void>? _dbSubscription;
+  bool _hasSavedCurrentSession = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _dbSubscription = DatabaseService.instance.onDataUpdated.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _dbSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _onSessionCompleted(TimerState state) async {
+    if (_hasSavedCurrentSession || state.mode.isBreak) return;
+    _hasSavedCurrentSession = true;
+
+    final session = Session(
+      id: const Uuid().v4(),
+      type: state.mode,
+      durationMinutes: state.totalSeconds ~/ 60,
+      startedAt: DateTime.now().subtract(Duration(seconds: state.totalSeconds)),
+      completedAt: DateTime.now(),
+      expEarned: state.potentialExp,
+      coinsEarned: state.potentialCoins,
+      wasCompleted: true,
+    );
+
+    await DatabaseService.instance.saveSession(session);
+
+    final totalExp = DatabaseService.instance.getTotalExp();
+    final streak = DatabaseService.instance.getStreakDays();
+    final minutes = DatabaseService.instance.getTotalFocusMinutes();
+
+    await NostrService.instance.broadcastProgress(
+      exp: totalExp,
+      level: GamificationRepository.calculateLevel(totalExp),
+      streakDays: streak,
+      totalMinutes: minutes,
+    );
+  }
 
   void _showModePicker(BuildContext context, TimerBloc bloc) {
     showModalBottomSheet(
@@ -36,10 +92,10 @@ class TimerScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Select Timer Mode',
+              'Timer Mode',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -52,18 +108,20 @@ class TimerScreen extends StatelessWidget {
                   style: TextStyle(
                     color: isCurrent ? AppColors.darkPrimary : Colors.white,
                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 14,
                   ),
                 ),
                 subtitle: Text(
                   mode.isBreak
-                      ? '${mode.defaultMinutes} min rest'
-                      : '${mode.defaultMinutes} min · +${mode.baseExp} EXP · +${mode.baseCoins} 🪙',
+                      ? '${mode.defaultMinutes} minutes rest'
+                      : '${mode.defaultMinutes} minutes focus',
                   style: const TextStyle(color: AppColors.darkTextSecondary, fontSize: 12),
                 ),
                 trailing: isCurrent
-                    ? const Icon(Icons.check_circle, color: AppColors.darkPrimary)
+                    ? const Icon(Icons.check, color: AppColors.darkPrimary, size: 20)
                     : null,
                 onTap: () {
+                  _hasSavedCurrentSession = false;
                   bloc.add(TimerModeChanged(mode));
                   Navigator.pop(ctx);
                 },
@@ -77,7 +135,18 @@ class TimerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TimerBloc, TimerState>(
+    final db = DatabaseService.instance;
+    final streak = db.getStreakDays();
+    final todayCount = db.getTodaySessionsCount();
+
+    return BlocConsumer<TimerBloc, TimerState>(
+      listener: (context, state) {
+        if (state.status == TimerStatus.completed) {
+          _onSessionCompleted(state);
+        } else if (state.status == TimerStatus.running) {
+          _hasSavedCurrentSession = false;
+        }
+      },
       builder: (context, state) {
         final bloc = context.read<TimerBloc>();
 
@@ -87,50 +156,32 @@ class TimerScreen extends StatelessWidget {
             children: [
               const SizedBox(height: AppSpacing.sm),
 
-              // Top Bar: Coins Pill, Ghost Mode Toggle, Profile, Settings
+              // Calm Top Bar: Ghost Mode indicator on left, Profile on right
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const CoinPill(coins: 240),
                   const GhostToggle(),
-                  Row(
-                    children: [
-                      AnimatedPressable(
-                        onTap: onOpenProfile,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.25),
-                              width: 1.5,
-                            ),
-                            color: Colors.white.withValues(alpha: 0.1),
-                          ),
-                          child: const Center(
-                            child: Text('🌱', style: TextStyle(fontSize: 18)),
-                          ),
+                  AnimatedPressable(
+                    onTap: widget.onOpenProfile,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.darkBorderGlass,
+                          width: 1.2,
+                        ),
+                        color: AppColors.darkSurfaceGlass,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 18,
+                          color: AppColors.darkTextPrimary,
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      AnimatedPressable(
-                        onTap: onOpenSettings,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.08),
-                          ),
-                          child: const Icon(
-                            Icons.settings_outlined,
-                            color: AppColors.darkTextSecondary,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -145,7 +196,7 @@ class TimerScreen extends StatelessWidget {
 
               const SizedBox(height: AppSpacing.xl),
 
-              // Primary Action Buttons
+              // Primary Action Controls
               TimerControls(
                 state: state,
                 onStart: () => bloc.add(const TimerStarted()),
@@ -156,18 +207,13 @@ class TimerScreen extends StatelessWidget {
 
               const Spacer(flex: 2),
 
-              // Daily Summary & Active Challenge Card
-              const SessionSummaryCard(
-                todaySessionsCount: 3,
-                streakDays: 7,
-                challengeDescription: 'Complete 3 Pomodoro sessions today',
-                challengeCurrent: 2,
-                challengeTarget: 3,
-                challengeRewardCoins: 20,
-                challengeRewardExp: 200,
+              // Quiet Daily Summary Card
+              SessionSummaryCard(
+                todaySessionsCount: todayCount,
+                streakDays: streak,
               ),
 
-              const SizedBox(height: 90), // Spacing for bottom navigation bar
+              const SizedBox(height: 90), // Bottom nav bar clearance
             ],
           ),
         );

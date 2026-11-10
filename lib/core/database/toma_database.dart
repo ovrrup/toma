@@ -19,6 +19,23 @@ LazyDatabase _openConnection() {
   });
 }
 
+/// Data entity representing an offline queued Nostr event.
+class PendingEvent {
+  final String id;
+  final int kind;
+  final String eventJson;
+  final DateTime createdAt;
+  final int retryCount;
+
+  const PendingEvent({
+    required this.id,
+    required this.kind,
+    required this.eventJson,
+    required this.createdAt,
+    this.retryCount = 0,
+  });
+}
+
 /// Persistent Drift / SQLite database for Toma.
 class TomaDatabase {
   static TomaDatabase? _instance;
@@ -195,6 +212,54 @@ class TomaDatabase {
 
   // --- User Profile & Economy Operations ---
 
+  Future<Map<String, dynamic>?> getUserProfile(String npub) async {
+    await ensureInitialized();
+    final results = await _executor.runSelect(
+      'SELECT * FROM user_profiles WHERE npub = ? LIMIT 1;',
+      [npub],
+    );
+    if (results.isEmpty) return null;
+    return results.first;
+  }
+
+  Future<void> upsertUserProfile({
+    required String npub,
+    required String displayName,
+    int totalExp = 0,
+    int coinsBalance = 0,
+    int streakDays = 0,
+    int longestStreak = 0,
+    int level = 1,
+    int totalSessions = 0,
+    int totalMinutes = 0,
+    String activeTheme = 'theme_default',
+    String unlockedAesthetics = '["theme_default"]',
+  }) async {
+    await ensureInitialized();
+    await _executor.runInsert(
+      '''
+      INSERT OR REPLACE INTO user_profiles (
+        npub, display_name, total_exp, coins_balance, streak_days,
+        longest_streak, level, total_sessions_completed, total_focus_minutes,
+        active_theme, unlocked_aesthetics_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      ''',
+      [
+        npub,
+        displayName,
+        totalExp,
+        coinsBalance,
+        streakDays,
+        longestStreak,
+        level,
+        totalSessions,
+        totalMinutes,
+        activeTheme,
+        unlockedAesthetics,
+      ],
+    );
+  }
+
   Future<void> updateProfileExpAndCoins({
     required String npub,
     required int addExp,
@@ -208,6 +273,22 @@ class TomaDatabase {
       WHERE npub = ?;
       ''',
       [addExp, addCoins, npub],
+    );
+  }
+
+  Future<void> updateActiveTheme(String npub, String themeId) async {
+    await ensureInitialized();
+    await _executor.runUpdate(
+      'UPDATE user_profiles SET active_theme = ? WHERE npub = ?;',
+      [themeId, npub],
+    );
+  }
+
+  Future<void> updateUnlockedThemes(String npub, String jsonList) async {
+    await ensureInitialized();
+    await _executor.runUpdate(
+      'UPDATE user_profiles SET unlocked_aesthetics_json = ? WHERE npub = ?;',
+      [jsonList, npub],
     );
   }
 }

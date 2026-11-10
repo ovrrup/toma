@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/database/database_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/services/nostr_service.dart';
 import '../../../../shared/widgets/animated_pressable.dart';
 import '../../../../shared/widgets/frosted_glass_card.dart';
 
@@ -10,8 +13,27 @@ class ProfileScreen extends StatelessWidget {
 
   const ProfileScreen({super.key, required this.onBack});
 
+  String _formatTime(int minutes) {
+    if (minutes < 60) return '${minutes}m';
+    return '${minutes ~/ 60}h ${minutes % 60}m';
+  }
+
+  String _truncatePubkey(String? key) {
+    if (key == null || key.isEmpty) return 'Anonymous';
+    if (key.length <= 16) return key;
+    return '${key.substring(0, 10)}...${key.substring(key.length - 6)}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final db = DatabaseService.instance;
+    final streak = db.getStreakDays();
+    final focusMinutes = db.getTotalFocusMinutes();
+    final totalSessions = db.getTodaySessionsCount(); // or total completed
+
+    final npub = NostrService.instance.npub ?? '';
+    final recoveryPhrase = NostrService.instance.recoveryPhrase ?? '';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: ListView(
@@ -26,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -34,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.md),
               Text(
-                'My Profile',
+                'Profile',
                 style: AppTypography.titleMedium.copyWith(color: Colors.white),
               ),
             ],
@@ -46,33 +68,30 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               children: [
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.darkPrimary,
-                      width: 2.5,
+                      color: AppColors.darkPrimary.withValues(alpha: 0.6),
+                      width: 1.5,
                     ),
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: AppColors.darkPrimary.withValues(alpha: 0.12),
                   ),
                   child: const Center(
-                    child: Text('🌱', style: TextStyle(fontSize: 40)),
+                    child: Icon(
+                      Icons.person_outline,
+                      size: 34,
+                      color: AppColors.darkPrimary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Alex Rivers',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 Text(
-                  'Level 4 · 🌳 Tree',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.darkExpPrimary,
+                  _truncatePubkey(npub),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -81,51 +100,25 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // Stat Pills
+          // Minimalist Focus Stats Card
           FrostedGlassCard(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatPill('🪙 240', 'Coins'),
-                _buildStatPill('⚡ 4.8k', 'EXP'),
-                _buildStatPill('🔥 7d', 'Streak'),
-                _buildStatPill('⏱️ 59h', 'Focused'),
+                _buildStatPill(_formatTime(focusMinutes), 'Focus Time', Icons.schedule, Colors.white),
+                Container(
+                  width: 1,
+                  height: 28,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+                _buildStatPill('${streak}d', 'Streak', Icons.local_fire_department, AppColors.darkAccent),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // Active Aesthetics Showcase
-          FrostedGlassCard(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '🎨 Active Aesthetics',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildTagChip('⬛ Monochrome Theme', isActive: true),
-                    _buildTagChip('⭕ Classic Ring', isActive: false),
-                    _buildTagChip('👤 Seedling Badge', isActive: false),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Account & Recovery Card (Familiar Web2 Experience)
+          // Cryptographic Recovery Card
           FrostedGlassCard(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
@@ -133,25 +126,25 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 const Row(
                   children: [
-                    Text('🛡️', style: TextStyle(fontSize: 18)),
+                    Icon(Icons.security, size: 16, color: AppColors.darkSecondary),
                     SizedBox(width: 8),
                     Text(
                       'Account & Recovery',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 15,
+                        fontSize: 14,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Your profile and progression live on this device. Save your 1-tap recovery card to keep your EXP and unlocked themes safe if you switch devices.',
+                  'Your decentralized Nostr keys live on this device. Save your 12-word pass to restore access anytime.',
                   style: TextStyle(
                     color: AppColors.darkTextSecondary,
                     fontSize: 12,
-                    height: 1.3,
+                    height: 1.35,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -160,32 +153,36 @@ class ProfileScreen extends StatelessWidget {
                     Expanded(
                       child: AnimatedPressable(
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Backup QR Card saved to gallery!'),
-                              backgroundColor: AppColors.darkPrimary,
-                            ),
-                          );
+                          if (npub.isNotEmpty) {
+                            Clipboard.setData(ClipboardData(text: npub));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Public key (npub) copied to clipboard'),
+                                backgroundColor: AppColors.darkPrimary,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
+                            color: Colors.white.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            border: Border.all(color: AppColors.darkBorderGlass),
                           ),
                           child: const Center(
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.qr_code, size: 16, color: Colors.white),
+                                Icon(Icons.key, size: 14, color: Colors.white),
                                 SizedBox(width: 6),
                                 Text(
-                                  'Save QR Card',
+                                  'Copy npub',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -198,31 +195,35 @@ class ProfileScreen extends StatelessWidget {
                     Expanded(
                       child: AnimatedPressable(
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('12-Word Recovery Pass copied to clipboard!'),
-                              backgroundColor: AppColors.darkPrimary,
-                            ),
-                          );
+                          if (recoveryPhrase.isNotEmpty) {
+                            Clipboard.setData(ClipboardData(text: recoveryPhrase));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('12-Word Recovery Pass copied to clipboard'),
+                                backgroundColor: AppColors.darkPrimary,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: Colors.white.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Center(
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.copy, size: 16, color: AppColors.darkTextSecondary),
+                                Icon(Icons.copy, size: 14, color: AppColors.darkTextSecondary),
                                 SizedBox(width: 6),
                                 Text(
                                   'Copy 12 Words',
                                   style: TextStyle(
                                     color: AppColors.darkTextSecondary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -243,16 +244,23 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatPill(String val, String label) {
+  Widget _buildStatPill(String val, String label, IconData icon, Color color) {
     return Column(
       children: [
-        Text(
-          val,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: color),
+            const SizedBox(width: 4),
+            Text(
+              val,
+              style: TextStyle(
+                color: color,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 2),
         Text(
@@ -260,29 +268,6 @@ class ProfileScreen extends StatelessWidget {
           style: const TextStyle(color: AppColors.darkTextSecondary, fontSize: 11),
         ),
       ],
-    );
-  }
-
-  Widget _buildTagChip(String label, {required bool isActive}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.darkPrimary.withValues(alpha: 0.25)
-            : Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isActive ? AppColors.darkPrimary : Colors.transparent,
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isActive ? Colors.white : AppColors.darkTextSecondary,
-          fontSize: 12,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
     );
   }
 }

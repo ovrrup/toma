@@ -26,37 +26,43 @@ class GhostToggle extends StatelessWidget {
             borderRadius: AppSpacing.radiusFull,
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
             customFill: isGhost
-                ? Colors.purple.withValues(alpha: 0.25)
+                ? AppColors.darkPrimary.withValues(alpha: 0.22)
                 : Colors.white.withValues(alpha: 0.08),
             customBorder: isGhost
-                ? Colors.purpleAccent.withValues(alpha: 0.6)
+                ? AppColors.darkPrimary.withValues(alpha: 0.5)
                 : Colors.white.withValues(alpha: 0.15),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('👻', style: TextStyle(fontSize: 14)),
+                Icon(
+                  isGhost ? Icons.visibility_off_outlined : Icons.wifi,
+                  size: 14,
+                  color: isGhost
+                      ? AppColors.darkPrimary
+                      : AppColors.darkTextSecondary,
+                ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
-                  isGhost ? 'Ghost ON' : 'Online',
+                  isGhost ? 'Ghost Mode' : 'Online',
                   style: AppTypography.statPill.copyWith(
                     fontSize: 12,
                     color: isGhost
-                        ? Colors.purpleAccent
+                        ? AppColors.darkPrimary
                         : AppColors.darkTextSecondary,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 5),
                 Container(
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isGhost ? Colors.purpleAccent : AppColors.darkSuccess,
+                    color: isGhost ? AppColors.darkPrimary : AppColors.darkSuccess,
                     boxShadow: [
                       BoxShadow(
                         color: isGhost
-                            ? Colors.purpleAccent.withValues(alpha: 0.8)
-                            : AppColors.darkSuccess.withValues(alpha: 0.8),
+                            ? AppColors.darkPrimary.withValues(alpha: 0.6)
+                            : AppColors.darkSuccess.withValues(alpha: 0.6),
                         blurRadius: 4,
                         spreadRadius: 1,
                       ),

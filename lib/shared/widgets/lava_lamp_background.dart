@@ -33,7 +33,7 @@ class _LavaLampBackgroundState extends State<LavaLampBackground>
     WidgetsBinding.instance.addObserver(this);
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 20),
+      duration: const Duration(seconds: 75),
     )..repeat();
 
     _loadShader();
@@ -138,10 +138,10 @@ class _LavaLampBackgroundState extends State<LavaLampBackground>
 
   Widget _buildFallbackGradient() {
     final colors = widget.themeVariant == TomaThemeVariant.monochrome
-        ? [const Color(0xFF080808), const Color(0xFF1E1E1E)]
+        ? [const Color(0xFF0F0F10), const Color(0xFF1E1E20)]
         : widget.themeVariant == TomaThemeVariant.light
-            ? [const Color(0xFFFFF8F0), const Color(0xFFFFE0D0)]
-            : [const Color(0xFF0A0A14), const Color(0xFF1E0E28)];
+            ? [const Color(0xFFFAF5F5), const Color(0xFFF2E5E6)]
+            : [const Color(0xFF130B0D), const Color(0xFF241014)];
 
     return Container(
       decoration: BoxDecoration(

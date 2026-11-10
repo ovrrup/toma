@@ -24,7 +24,11 @@ class CoinPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🪙', style: TextStyle(fontSize: 16)),
+          const Icon(
+            Icons.toll_outlined,
+            size: 16,
+            color: AppColors.darkSecondary,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Text(
             '$coins',
