@@ -1,0 +1,64 @@
+name: toma
+description: "A pomodoro session tracker with deep gamification and a decentralized Nostr community."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '^3.5.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_bloc: ^9.0.0
+  equatable: ^2.0.7
+
+  # Navigation
+  go_router: ^14.8.0
+
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  drift: ^2.22.0
+  sqlite3_flutter_libs: ^0.5.0
+  path_provider: ^2.1.0
+  path: ^1.9.0
+
+  # Nostr Protocol
+  ndk: ^0.10.1
+  ndk_drift: ^0.2.0
+
+  # Security & Key Storage
+  flutter_secure_storage: ^9.2.0
+
+  # UI & Motion
+  flutter_animate: ^4.5.2
+  animations: ^2.0.8
+
+  # Utilities
+  intl: ^0.19.0
+  fl_chart: ^0.70.0
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.0
+  flutter_local_notifications: ^18.0.0
+  wakelock_plus: ^1.2.0
+  share_plus: ^10.0.0
+  connectivity_plus: ^6.1.0
+  uuid: ^4.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.0
+  hive_generator: ^2.0.0
+  drift_dev: ^2.22.0
+  bloc_test: ^9.0.0
+  mocktail: ^1.0.0
+
+flutter:
+  uses-material-design: true
+
+  shaders:
+    - shaders/lava_lamp.frag
