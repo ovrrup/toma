@@ -1,4 +1,4 @@
-import '../../timer/domain/entities/session_type.dart';
+import '../../../timer/domain/entities/session_type.dart';
 
 /// Calculation engine for EXP progression, Coins rewards, levels, and streak logic.
 class GamificationRepository {

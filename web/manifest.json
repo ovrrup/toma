@@ -1,0 +1,35 @@
+{
+    "name": "Toma",
+    "short_name": "Toma",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#130B0D",
+    "theme_color": "#D94D52",
+    "description": "A pomodoro session tracker with deep gamification and a decentralized Nostr community.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

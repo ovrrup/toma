@@ -116,11 +116,25 @@ class NostrKeyManager {
     'shadow', 'vital', 'tempo', 'echo', 'spirit', 'steady', 'vigor', 'serene'
   ];
 
+  Future<String?> _safeRead(String key) async {
+    try {
+      return await _storage.read(key: key);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _safeWrite(String key, String? value) async {
+    try {
+      await _storage.write(key: key, value: value);
+    } catch (_) {}
+  }
+
   /// Initializes keys from secure storage or generates a fresh decentralized identity.
   Future<void> init() async {
-    _nsecHex = await _storage.read(key: _nsecKey);
-    _npubHex = await _storage.read(key: _npubKey);
-    _mnemonic = await _storage.read(key: _mnemonicKey);
+    _nsecHex = await _safeRead(_nsecKey);
+    _npubHex = await _safeRead(_npubKey);
+    _mnemonic = await _safeRead(_mnemonicKey);
 
     if (_nsecHex == null || _npubHex == null) {
       await generateSilentKeypair();
@@ -147,9 +161,9 @@ class NostrKeyManager {
     final words = List.generate(12, (_) => _wordList[random.nextInt(_wordList.length)]);
     _mnemonic = words.join(' ');
 
-    await _storage.write(key: _nsecKey, value: _nsecHex);
-    await _storage.write(key: _npubKey, value: _npubHex);
-    await _storage.write(key: _mnemonicKey, value: _mnemonic);
+    await _safeWrite(_nsecKey, _nsecHex);
+    await _safeWrite(_npubKey, _npubHex);
+    await _safeWrite(_mnemonicKey, _mnemonic);
   }
 
   /// Imports an account from a 12-word recovery pass, bech32 nsec, or 64-char hex key.

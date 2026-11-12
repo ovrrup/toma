@@ -112,6 +112,12 @@ class ProfileScreen extends StatelessWidget {
                   height: 28,
                   color: Colors.white.withValues(alpha: 0.08),
                 ),
+                _buildStatPill('$totalSessions', 'Today', Icons.check_circle_outline, AppColors.darkSecondary),
+                Container(
+                  width: 1,
+                  height: 28,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
                 _buildStatPill('${streak}d', 'Streak', Icons.local_fire_department, AppColors.darkAccent),
               ],
             ),

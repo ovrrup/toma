@@ -46,7 +46,6 @@ class _TomaAppState extends State<TomaApp> {
         themeData = AppTheme.lightTheme;
         break;
       case TomaThemeVariant.dark:
-      default:
         themeData = AppTheme.darkTheme;
         break;
     }

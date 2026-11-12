@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../../../core/database/database_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -482,13 +481,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     final key = textController.text.trim();
                     if (key.isNotEmpty) {
                       await NostrService.instance.pairFriendFromQr(key);
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Connected with peer!'),
-                          backgroundColor: AppColors.darkPrimary,
-                        ),
-                      );
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Connected with peer!'),
+                            backgroundColor: AppColors.darkPrimary,
+                          ),
+                        );
+                      }
                     }
                   },
                   child: Container(

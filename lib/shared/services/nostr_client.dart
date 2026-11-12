@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:crypto/crypto.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/database/database_service.dart';
@@ -136,7 +136,7 @@ class NostrClient {
   final List<String> relays = AppConstants.defaultRelays;
   final Set<String> _followedPubkeys = {};
 
-  final Map<String, WebSocket> _sockets = {};
+  final Map<String, WebSocketChannel> _sockets = {};
   final Map<String, StreamSubscription> _socketSubscriptions = {};
 
   bool _isConnected = false;
@@ -212,7 +212,7 @@ class NostrClient {
 
     for (final ws in _sockets.values) {
       try {
-        await ws.close();
+        await ws.sink.close();
       } catch (_) {}
     }
     _sockets.clear();
@@ -221,10 +221,10 @@ class NostrClient {
   Future<void> _connectToRelay(String url) async {
     if (!_isConnected) return;
     try {
-      final ws = await WebSocket.connect(url).timeout(const Duration(seconds: 4));
-      _sockets[url] = ws;
+      final channel = WebSocketChannel.connect(Uri.parse(url));
+      _sockets[url] = channel;
 
-      final sub = ws.listen(
+      final sub = channel.stream.listen(
         (data) => _handleRelayMessage(data.toString()),
         onError: (_) => _handleRelayDisconnect(url),
         onDone: () => _handleRelayDisconnect(url),
@@ -232,8 +232,8 @@ class NostrClient {
       _socketSubscriptions[url] = sub;
 
       // Subscribe to leaderboards and active channel
-      _subscribeToLeaderboards(ws);
-      _subscribeToChannel(_activeChannelId, ws);
+      _subscribeToLeaderboards(channel);
+      _subscribeToChannel(_activeChannelId, channel);
     } catch (_) {
       _sockets.remove(url);
     }
@@ -282,7 +282,7 @@ class NostrClient {
     }
   }
 
-  void _subscribeToLeaderboards([WebSocket? targetWs]) {
+  void _subscribeToLeaderboards([WebSocketChannel? targetWs]) {
     final subId = 'toma_lb_${DateTime.now().millisecondsSinceEpoch}';
     final req = jsonEncode([
       'REQ',
@@ -295,14 +295,14 @@ class NostrClient {
 
     if (targetWs != null) {
       try {
-        targetWs.add(req);
+        targetWs.sink.add(req);
       } catch (_) {}
     } else {
       _sendToAllRelays(req);
     }
   }
 
-  void _subscribeToChannel(String channelId, [WebSocket? targetWs]) {
+  void _subscribeToChannel(String channelId, [WebSocketChannel? targetWs]) {
     final subId = 'toma_ch_${channelId}_${DateTime.now().millisecondsSinceEpoch}';
     final req = jsonEncode([
       'REQ',
@@ -316,7 +316,7 @@ class NostrClient {
 
     if (targetWs != null) {
       try {
-        targetWs.add(req);
+        targetWs.sink.add(req);
       } catch (_) {}
     } else {
       _sendToAllRelays(req);
@@ -554,7 +554,7 @@ class NostrClient {
   void _sendToAllRelays(String payload) {
     for (final ws in _sockets.values) {
       try {
-        ws.add(payload);
+        ws.sink.add(payload);
       } catch (_) {}
     }
   }

@@ -84,7 +84,6 @@ class _LavaLampBackgroundState extends State<LavaLampBackground>
         return AppColors.shaderMonoColorA;
       case TomaThemeVariant.light:
       case TomaThemeVariant.dark:
-      default:
         return AppColors.shaderFireColorA;
     }
   }
@@ -95,7 +94,6 @@ class _LavaLampBackgroundState extends State<LavaLampBackground>
         return AppColors.shaderMonoColorB;
       case TomaThemeVariant.light:
       case TomaThemeVariant.dark:
-      default:
         return AppColors.shaderFireColorB;
     }
   }
@@ -107,7 +105,6 @@ class _LavaLampBackgroundState extends State<LavaLampBackground>
       case TomaThemeVariant.light:
         return [0.98, 0.95, 0.92]; // Light cream
       case TomaThemeVariant.dark:
-      default:
         return AppColors.shaderFireBg;
     }
   }
